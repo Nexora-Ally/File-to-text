@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>File to Text Extractor · Advanced Dev Utility</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0c10;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Fira Code', monospace;
+            color: #eef2ff;
+            padding: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #2a2f3a;
+            padding-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #c0e0ff, #8f9eff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .sub {
+            font-size: 0.8rem;
+            color: #8a93b0;
+            font-family: monospace;
+        }
+
+        .stats-area {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .badge {
+            background: #1a1e28;
+            border-radius: 40px;
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+            border: 1px solid #2f3542;
+            font-weight: 500;
+        }
+
+        /* upload zones */
+        .upload-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .upload-card {
+            background: #11141e;
+            border-radius: 28px;
+            border: 1px solid #262c38;
+            padding: 1.2rem 1.5rem;
+            flex: 1;
+            transition: all 0.2s;
+        }
+
+        .upload-card h3 {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        button, .file-label {
+            background: #1b202c;
+            border: 1px solid #2f3645;
+            color: #e2e9ff;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button:hover, .file-label:hover {
+            background: #2a3140;
+            border-color: #5d6f94;
+        }
+
+        .primary-btn {
+            background: #2a3c6e;
+            border-color: #4b6c9e;
+        }
+
+        .primary-btn:hover {
+            background: #3e57a0;
+        }
+
+        .danger-btn {
+            background: #2a1c22;
+            border-color: #6e3b44;
+            color: #ffb3bb;
+        }
+
+        .danger-btn:hover {
+            background: #4a252f;
+        }
+
+        /* filter section */
+        .filter-section {
+            background: #0e1119;
+            border-radius: 20px;
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid #262d39;
+        }
+
+        .filter-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #9da6c2;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-chip {
+            background: #181e2a;
+            border-radius: 32px;
+            padding: 0.3rem 0.9rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: 1px solid #2d3442;
+            transition: 0.1s;
+        }
+
+        .filter-chip.active {
+            background: #3b4a7c;
+            border-color: #7f96cf;
+            color: white;
+        }
+
+        /* main 2 columns */
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .filelist-panel {
+            flex: 1.2;
+            min-width: 280px;
+            background: #0c0f16;
+            border-radius: 28px;
+            border: 1px solid #262d38;
+            padding: 1.2rem;
+            height: fit-content;
+        }
+
+        .output-panel {
+            flex: 2;
+            min-width: 320px;
+            background: #0b0e14;
+            border-radius: 28px;
+            border: 1px solid #262d38;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #252c38;
+        }
+
+        .file-items {
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .file-row {
+            background: #121724;
+            margin: 0.6rem 0;
+            padding: 0.7rem 1rem;
+            border-radius: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #222a36;
+            transition: 0.1s;
+        }
+
+        .file-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .file-name {
+            font-weight: 500;
+            font-size: 0.85rem;
+            font-family: monospace;
+            word-break: break-word;
+        }
+
+        .file-meta {
+            font-size: 0.7rem;
+            color: #8590aa;
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #9aa4c2;
+            padding: 0 8px;
+        }
+
+        .remove-btn:hover {
+            color: #f77b72;
+        }
+
+        textarea {
+            width: 100%;
+            height: 440px;
+            background: #010308;
+            border: 1px solid #2a3140;
+            border-radius: 20px;
+            padding: 1rem;
+            color: #f0f3ff;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            line-height: 1.45;
+            resize: vertical;
+        }
+
+        .output-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 1rem;
+            align-items: center;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #1e2432;
+            border-radius: 40px;
+            height: 6px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #6d8eff;
+            transition: width 0.2s ease;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 30px;
+            background: #1b212e;
+        }
+
+        .error-badge {
+            background: #3c1e24;
+            color: #ffa69e;
+        }
+
+        .drag-active {
+            border-color: #6d8eff;
+            background: #181f2c;
+            box-shadow: 0 0 0 2px rgba(109, 142, 255, 0.2);
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            color: #687194;
+        }
+
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #4b5570;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #11141e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2f374a;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <div>
+            <h1>📄 File to Text Extractor · Advanced</h1>
+            <div class="sub">Batch text extraction · AI ready · Full error handling</div>
+        </div>
+        <div class="stats-area">
+            <div class="badge" id="totalCountBadge">📁 0 files</div>
+            <div class="badge" id="filterCountBadge">🎯 all</div>
+        </div>
+    </div>
+
+    <div class="upload-grid">
+        <div class="upload-card" id="dropZone">
+            <h3>📂 Drag & Drop (files / folders)</h3>
+            <div class="btn-group">
+                <label class="file-label">📎 Select files
+                    <input type="file" id="multiFileInput" multiple style="display: none;">
+                </label>
+                <label class="file-label">📁 Select folder
+                    <input type="file" id="folderInput" webkitdirectory directory multiple style="display: none;">
+                </label>
+                <button id="singleAddBtn">➕ Add single file</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <span class="filter-label">🔍 Filter by extension:</span>
+        <div class="filter-buttons" id="filterContainer">
+            <span data-ext="all" class="filter-chip active">All</span>
+            <span data-ext=".js" class="filter-chip">.js</span>
+            <span data-ext=".ts" class="filter-chip">.ts</span>
+            <span data-ext=".html" class="filter-chip">.html</span>
+            <span data-ext=".css" class="filter-chip">.css</span>
+            <span data-ext=".json" class="filter-chip">.json</span>
+            <span data-ext=".py" class="filter-chip">.py</span>
+            <span data-ext=".txt" class="filter-chip">.txt</span>
+            <span data-ext=".md" class="filter-chip">.md</span>
+            <span data-ext="reset" class="filter-chip reset">✖ clear filter</span>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div class="filelist-panel">
+            <div class="panel-header">
+                <span>📋 File queue <span id="visibleFileCount">(0)</span></span>
+                <button id="clearAllFiles" class="danger-btn" style="padding: 0.3rem 0.8rem;">🗑 Clear all</button>
+            </div>
+            <div id="fileListContainer" class="file-items">
+                <div class="empty-message">✨ Upload files via buttons or drag & drop.</div>
+            </div>
+        </div>
+
+        <div class="output-panel">
+            <div class="panel-header">
+                <span>📝 Extracted text output</span>
+                <div style="display: flex; gap: 8px;">
+                    <button id="extractAllBtn" class="primary-btn">⚡ Extract All</button>
+                    <button id="copyOutputBtn" class="primary-btn">📋 Copy All</button>
+                    <button id="downloadTxtBtn" class="primary-btn">💾 Download .txt</button>
+                </div>
+            </div>
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <textarea id="outputTextarea" placeholder="Click 'Extract All' to combine filtered files...&#10;Output format: // filename.ext&#10;content..."></textarea>
+            <div class="output-actions">
+                <span id="statusMessage" style="font-size: 0.75rem; color: #8ea0dd;"></span>
+            </div>
+        </div>
+    </div>
+    <footer>⚡ Semua pemrosesan dilakukan di browser Anda. Mendukung file besar, folder rekursif, error handling per file, progress bar.</footer>
+</div>
+
+<script>
+    // ---------- STATE ----------
+    let uploadedFiles = [];      // { id, name, size, fileObj, extension, readError? }
+    let activeFilter = "all";
+    let nextId = 1;
+
+    // DOM elements
+    const fileListContainer = document.getElementById('fileListContainer');
+    const outputTextarea = document.getElementById('outputTextarea');
+    const extractBtn = document.getElementById('extractAllBtn');
+    const copyBtn = document.getElementById('copyOutputBtn');
+    const downloadBtn = document.getElementById('downloadTxtBtn');
+    const clearAllBtn = document.getElementById('clearAllFiles');
+    const totalCountBadge = document.getElementById('totalCountBadge');
+    const filterCountBadge = document.getElementById('filterCountBadge');
+    const visibleFileCountSpan = document.getElementById('visibleFileCount');
+    const statusSpan = document.getElementById('statusMessage');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+
+    // helper: format size
+    function formatSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getExtension(filename) {
+        const lastDot = filename.lastIndexOf('.');
+        if (lastDot === -1) return '';
+        return filename.slice(lastDot).toLowerCase();
+    }
+
+    // add files (array of File objects)
+    function addFilesToState(files) {
+        const newEntries = [];
+        for (const file of files) {
+            // cek duplikat berdasarkan nama + ukuran + lastModified (lebih akurat)
+            const isDuplicate = uploadedFiles.some(f => f.name === file.name && f.size === file.size && f.fileObj.lastModified === file.lastModified);
+            if (!isDuplicate && file.size > 0) {
+                newEntries.push({
+                    id: nextId++,
+                    name: file.name,
+                    size: file.size,
+                    fileObj: file,
+                    extension: getExtension(file.name),
+                    readError: null
+                });
+            }
+        }
+        if (newEntries.length) {
+            uploadedFiles.push(...newEntries);
+            showStatus(`✅ ${newEntries.length} file(s) ditambahkan`, 2000);
+        } else {
+            showStatus(`⚠️ Tidak ada file baru (duplikat atau kosong)`, 1500);
+        }
+        renderFileList();
+    }
+
+    function removeFileById(id) {
+        uploadedFiles = uploadedFiles.filter(f => f.id !== id);
+        renderFileList();
+    }
+
+    function clearAll() {
+        uploadedFiles = [];
+        renderFileList();
+        outputTextarea.value = '';
+        showStatus('🗑 Semua file dihapus', 1500);
+    }
+
+    function getFilteredFiles() {
+        if (activeFilter === 'all') return [...uploadedFiles];
+        return uploadedFiles.filter(f => f.extension === activeFilter);
+    }
+
+    // render file list dengan status error per file jika ada
+    function renderFileList() {
+        const filtered = getFilteredFiles();
+        const totalAll = uploadedFiles.length;
+        totalCountBadge.innerText = `📁 ${totalAll} file${totalAll !== 1 ? 's' : ''}`;
+        visibleFileCountSpan.innerText = `(${filtered.length} visible)`;
+        filterCountBadge.innerText = activeFilter === 'all' ? '🎯 all' : `🎯 ${activeFilter}`;
+
+        if (filtered.length === 0) {
+            fileListContainer.innerHTML = `<div class="empty-message">📂 Tidak ada file dengan filter "${activeFilter}". Upload file baru.</div>`;
+            return;
+        }
+
+        let html = '';
+        filtered.forEach(file => {
+            const errorMark = file.readError ? `<span class="status-badge error-badge" style="margin-left: 6px;">⚠️ error</span>` : '';
+            html += `
+                <div class="file-row" data-id="${file.id}">
+                    <div class="file-info">
+                        <div class="file-name">📄 ${escapeHtml(file.name)} ${errorMark}</div>
+                        <div class="file-meta">
+                            <span>${formatSize(file.size)}</span>
+                            <span>${file.extension || 'no ext'}</span>
+                        </div>
+                    </div>
+                    <button class="remove-btn" data-id="${file.id}" title="Hapus">✖</button>
+                </div>
+            `;
+        });
+        fileListContainer.innerHTML = html;
+        // attach remove events
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.getAttribute('data-id'), 10);
+                if (!isNaN(id)) removeFileById(id);
+            });
+        });
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function showStatus(msg, duration = 2000) {
+        statusSpan.innerText = msg;
+        if (duration > 0) setTimeout(() => {
+            if (statusSpan.innerText === msg) statusSpan.innerText = '';
+        }, duration);
+    }
+
+    // --- Extraction dengan progress dan error per file ---
+    async function extractAllFiles() {
+        const filesToProcess = getFilteredFiles();
+        if (filesToProcess.length === 0) {
+            outputTextarea.value = "⚠️ Tidak ada file untuk diekstrak. Periksa filter atau tambah file.";
+            return;
+        }
+
+        // reset error sebelumnya
+        for (const f of uploadedFiles) f.readError = null;
+
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        let combined = '';
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < filesToProcess.length; i++) {
+            const fileItem = filesToProcess[i];
+            const percent = ((i / filesToProcess.length) * 100);
+            progressBar.style.width = percent + '%';
+            try {
+                const content = await readFileAsText(fileItem.fileObj);
+                const header = `// ${fileItem.name}\n`;
+                combined += header + content + (i < filesToProcess.length - 1 ? '\n\n' : '\n');
+                successCount++;
+                fileItem.readError = null;
+            } catch (err) {
+                errorCount++;
+                fileItem.readError = err.message;
+                combined += `// ${fileItem.name}\n⚠️ ERROR: Gagal membaca file — ${err.message}\n\n`;
+            }
+            // update UI setiap file untuk feedback
+            renderFileList(); // refresh status error
+            await new Promise(r => setTimeout(r, 5));
+        }
+        progressBar.style.width = '100%';
+        outputTextarea.value = combined;
+        showStatus(`✅ Selesai: ${successCount} sukses, ${errorCount} gagal`, 3000);
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+        }, 800);
+        renderFileList();
+    }
+
+    function readFileAsText(fileObj) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = () => reject(new Error("File read error (encoding atau file corrupt)"));
+            reader.readAsText(fileObj, "UTF-8");
+        });
+    }
+
+    async function copyOutput() {
+        const text = outputTextarea.value;
+        if (!text.trim()) {
+            showStatus("⚠️ Tidak ada teks untuk disalin", 1200);
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(text);
+            showStatus("✅ Teks berhasil disalin ke clipboard!", 1500);
+        } catch {
+            showStatus("❌ Gagal menyalin", 1200);
+        }
+    }
+
+    function downloadAsTxt() {
+        const text = outputTextarea.value;
+        if (!text.trim()) {
+            showStatus("⚠️ Tidak ada konten untuk diunduh", 1200);
+            return;
+        }
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = `extracted_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showStatus("💾 File teks diunduh", 1500);
+    }
+
+    // --- Drag & Drop dengan folder recursive ---
+    async function handleDrop(e) {
+        e.preventDefault();
+        dropZone.classList.remove('drag-active');
+        const items = e.dataTransfer.items;
+        const filesToAdd = [];
+        for (let i = 0; i < items.length; i++) {
+            const entry = items[i].webkitGetAsEntry();
+            if (entry) {
+                if (entry.isFile) {
+                    const file = items[i].getAsFile();
+                    if (file) filesToAdd.push(file);
+                } else if (entry.isDirectory) {
+                    const dirFiles = await readAllFilesFromDirectory(entry);
+                    filesToAdd.push(...dirFiles);
+                }
+            } else {
+                const file = items[i].getAsFile();
+                if (file) filesToAdd.push(file);
+            }
+        }
+        if (filesToAdd.length) addFilesToState(filesToAdd);
+        else showStatus("Tidak ada file valid", 1000);
+    }
+
+    async function readAllFilesFromDirectory(dirEntry) {
+        const files = [];
+        const reader = dirEntry.createReader();
+        const readEntries = () => {
+            return new Promise((resolve, reject) => {
+                reader.readEntries(async (entries) => {
+                    if (entries.length === 0) resolve([]);
+                    else {
+                        for (const entry of entries) {
+                            if (entry.isFile) {
+                                const file = await new Promise((res) => entry.file(res));
+                                files.push(file);
+                            } else if (entry.isDirectory) {
+                                const subFiles = await readAllFilesFromDirectory(entry);
+                                files.push(...subFiles);
+                            }
+                        }
+                        const more = await readEntries();
+                        resolve(more);
+                    }
+                }, reject);
+            });
+        };
+        await readEntries();
+        return files;
+    }
+
+    // setup drag zone
+    const dropZone = document.getElementById('dropZone');
+    function setupDragDrop() {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'));
+        dropZone.addEventListener('drop', handleDrop);
+    }
+
+    // filter chip logic
+    function initFilters() {
+        const chips = document.querySelectorAll('.filter-chip');
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const ext = chip.getAttribute('data-ext');
+                if (ext === 'reset') {
+                    activeFilter = 'all';
+                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    const allChip = document.querySelector('.filter-chip[data-ext="all"]');
+                    if (allChip) allChip.classList.add('active');
+                } else {
+                    activeFilter = ext;
+                    chips.forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                }
+                renderFileList();
+            });
+        });
+    }
+
+    // single file picker
+    function initSinglePicker() {
+        const singleInput = document.createElement('input');
+        singleInput.type = 'file';
+        singleInput.style.display = 'none';
+        singleInput.multiple = false;
+        singleInput.addEventListener('change', (e) => {
+            if (e.target.files.length) addFilesToState(e.target.files);
+            singleInput.value = '';
+        });
+        document.getElementById('singleAddBtn').addEventListener('click', () => singleInput.click());
+        document.body.appendChild(singleInput);
+    }
+
+    // inputs multiple & folder
+    const multiInput = document.getElementById('multiFileInput');
+    const folderInput = document.getElementById('folderInput');
+    multiInput.addEventListener('change', (e) => { if(e.target.files.length) addFilesToState(e.target.files); multiInput.value = ''; });
+    folderInput.addEventListener('change', (e) => { if(e.target.files.length) addFilesToState(e.target.files); folderInput.value = ''; });
+
+    // event binding
+    extractBtn.addEventListener('click', extractAllFiles);
+    copyBtn.addEventListener('click', copyOutput);
+    downloadBtn.addEventListener('click', downloadAsTxt);
+    clearAllBtn.addEventListener('click', clearAll);
+
+    // init all
+    function init() {
+        setupDragDrop();
+        initFilters();
+        initSinglePicker();
+        renderFileList();
+        outputTextarea.value = '// Ready: Upload file (drag & drop folder, multiple)\n// Klik "Extract All" untuk menggabungkan teks dari semua file (sesuai filter)\n// Error per file akan ditampilkan di daftar.';
+    }
+    init();
+</script>
+</body>
+</html>
